@@ -1,29 +1,48 @@
 import RPi.GPIO as GPIO
 import time
 
-# Setup
-PIR_PIN = 17  # GPIO pin for PIR sensor
-BUZZER_PIN = 18  # GPIO pin for Buzzer
+# Pin configuration
+PIR_PIN = 17        # GPIO pin for PIR sensor
+BUZZER_PIN = 18     # GPIO pin for buzzer
 
-GPIO.setmode(GPIO.BCM)  # Use Broadcom pin-numbering scheme
-GPIO.setup(PIR_PIN, GPIO.IN)  # Set PIR_PIN as input
-GPIO.setup(BUZZER_PIN, GPIO.OUT)  # Set BUZZER_PIN as output
+# Initialize GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIR_PIN, GPIO.IN)      # Set PIR pin as input
+GPIO.setup(BUZZER_PIN, GPIO.OUT)  # Set Buzzer pin as output
 
-try:
-    print("PIR Motion Sensor Test (CTRL+C to exit)")
+def beep_buzzer():
+    """Function to beep the buzzer twice: one low and one high."""
+    # First beep - low
+    GPIO.output(BUZZER_PIN, GPIO.HIGH)
+    time.sleep(0.2)  # Short beep
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
+    time.sleep(0.1)  # Short pause
+
+    # Second beep - high
+    GPIO.output(BUZZER_PIN, GPIO.HIGH)
+    time.sleep(0.5)  # Longer beep
+    GPIO.output(BUZZER_PIN, GPIO.LOW)
+
+def main():
+    print("PIR Motion Sensor and Buzzer Test (CTRL+C to exit)")
     time.sleep(2)  # Allow PIR sensor to settle
     print("Ready")
 
-    while True:
-        if GPIO.input(PIR_PIN):
-            print("Motion Detected!")
-            GPIO.output(BUZZER_PIN, GPIO.HIGH)  # Turn on the buzzer
-            time.sleep(1)  # Keep the buzzer on for 1 second
-        else:
-            GPIO.output(BUZZER_PIN, GPIO.LOW)  # Turn off the buzzer
-        time.sleep(0.1)  # Small delay to prevent excessive CPU usage
+    try:
+        while True:
+            if GPIO.input(PIR_PIN):
+                print("Motion Detected!")
+                beep_buzzer()  # Trigger the beeping sequence
+                time.sleep(2)  # Wait 2 seconds to avoid multiple triggers
+            else:
+                GPIO.output(BUZZER_PIN, GPIO.LOW)  # Ensure buzzer is off
+            time.sleep(0.1)  # Small delay to prevent excessive CPU usage
 
-except KeyboardInterrupt:
-    print("Quit")
-finally:
-    GPIO.cleanup()  # Clean up GPIO settings
+    except KeyboardInterrupt:
+        print("Program interrupted")
+
+    finally:
+        GPIO.cleanup()  # Clean up GPIO settings
+
+if __name__ == "__main__":
+    main()

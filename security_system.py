@@ -13,15 +13,15 @@ camera = PiCamera()
 
 def send_email(image_path):
     # Set up email server and credentials
-    from_address = "your_email@gmail.com"
-    to_address = "recipient_email@gmail.com"
-    password = "your_password"
+    from_address = emmanueleli120@gmail.com
+    to_address = christopherniisackey18@gmail.com
+    password = emmanueleliage@130
 
     # Create email
     msg = MIMEMultipart()
-    msg['Subject'] = 'Intruder Alert'
-    msg['From'] = from_address
-    msg['To'] = to_address
+    msg['Alert'] = 'Intruder Alert'
+    msg['Emmanuel'] = from_address
+    msg['Christopher'] = to_address
 
     # Attach image
     with open(image_path, 'rb') as f:
