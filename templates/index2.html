@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Security System</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('/static/intruder_20240905_122513.jpg');
+            background-size: cover;
+            color: white;
+        }
+        .container {
+            margin-top: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #controls {
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">IoT Security System</h1>
+
+        <div id="controls" class="mb-4">
+            <a href="/start" class="btn btn-success">Start Monitoring</a>
+            <a href="/stop" class="btn btn-danger">Stop Monitoring</a>
+            <a href="/alert_police" class="btn btn-warning">Alert Police</a>
+        </div>
+
+        <div id="alerts">
+            <h2>Past Alerts</h2>
+            <ul class="list-group">
+                {% for alert in alerts %}
+                    <li class="list-group-item">{{ alert }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div id="latest-image" class="mt-4">
+            <h2>Latest Image</h2>
+            {% if latest_image %}
+                <img src="{{ url_for('static', filename=latest_image.split('/')[-1]) }}" class="img-fluid" alt="Intruder Image">
+            {% else %}
+                <p>No image captured yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

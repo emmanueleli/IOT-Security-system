@@ -1,10 +1,9 @@
 from flask import Flask, render_template, Response, redirect, url_for
 from gpiozero import MotionSensor, Buzzer
-import cv2
+from picamera import PiCamera
 import serial
 from time import sleep
 from datetime import datetime
-import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -13,11 +12,13 @@ app = Flask(__name__)
 pir = MotionSensor(17)   # PIR sensor connected to GPIO 17
 buzzer = Buzzer(18)      # Buzzer connected to GPIO 18
 gsm = serial.Serial('/dev/serial0', 9600, timeout=1)  # GSM module on serial port
+camera = PiCamera()
+camera.resolution = (640, 480)
 
 # Initialize variables
 monitoring = False
 alerts = []
-latest_image_path = None  # To keep track of the latest captured image
+latest_image = None  # To store the path of the latest image captured
 
 def send_sms(phone_number, message):
     """Send SMS using the GSM module."""
@@ -30,21 +31,11 @@ def send_sms(phone_number, message):
 
 def capture_image():
     """Capture image from the camera."""
-    global latest_image_path
-    camera = cv2.VideoCapture(0)
-    sleep(2)
-    ret, frame = camera.read()
-    if ret:
-        # Save image to the static directory
-        image_name = f'intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
-        image_path = os.path.join('static', image_name)
-        cv2.imwrite(image_path, frame)
-        latest_image_path = image_name  # Update the latest image path
-        camera.release()
-        return image_path
-    else:
-        camera.release()
-        return None
+    global latest_image
+    image_path = f'static/intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg'
+    camera.capture(image_path)
+    latest_image = image_path
+    return image_path
 
 def motion_detected():
     """Handle motion detection."""
@@ -58,16 +49,15 @@ def motion_detected():
     buzzer.off()
     
     image_path = capture_image()
-    if image_path:
-        alert_message = f"Motion detected at {datetime.now()}! Picture saved at {image_path}"
-        alerts.append(alert_message)
-        send_sms('+233242013172', f"Intruder detected! Check: http://10.10.80.154:5000/{image_path}")
-        print(alert_message)
+    alert_message = f"Motion detected at {datetime.now()}! Picture saved at {image_path}"
+    alerts.append(alert_message)
+    send_sms("+233242013172", f"Intruder detected! Check: http://10.10.80.154:5000/{image_path}")
+    print(alert_message)
 
 @app.route('/')
 def index():
     """Homepage with controls."""
-    return render_template('index.html', alerts=alerts, latest_image=latest_image_path)
+    return render_template('index2.html', alerts=alerts, latest_image=latest_image)
 
 @app.route('/start')
 def start_monitoring():
@@ -88,9 +78,8 @@ def stop_monitoring():
 @app.route('/alert_police')
 def alert_police():
     """Simulate alerting the police."""
-    # Add logic to alert police (e.g., send an SMS or email)
     alerts.append("Police alerted!")
-    send_sms('+233508756598', "Intruder detected! Immediate assistance required!")
+    send_sms("+233508756598", "Intruder detected! Immediate assistance required!")
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

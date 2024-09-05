@@ -1,4 +1,4 @@
-from flask import Flask, render_template, Response, redirect, url_for
+from flask import Flask, render_template, jsonify
 from gpiozero import MotionSensor, Buzzer
 import cv2
 import serial
@@ -17,7 +17,8 @@ gsm = serial.Serial('/dev/serial0', 9600, timeout=1)  # GSM module on serial por
 # Initialize variables
 monitoring = False
 alerts = []
-latest_image_path = None  # To keep track of the latest captured image
+latest_image = None
+captured_images = []  # List to hold all captured images
 
 def send_sms(phone_number, message):
     """Send SMS using the GSM module."""
@@ -30,21 +31,22 @@ def send_sms(phone_number, message):
 
 def capture_image():
     """Capture image from the camera."""
-    global latest_image_path
-    camera = cv2.VideoCapture(0)
-    sleep(2)
+    camera = cv2.VideoCapture(0)  # Adjust to use the correct camera index
     ret, frame = camera.read()
     if ret:
-        # Save image to the static directory
-        image_name = f'intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
-        image_path = os.path.join('static', image_name)
+        global latest_image
+        image_filename = f'intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg'
+        image_path = os.path.join('static', image_filename)
         cv2.imwrite(image_path, frame)
-        latest_image_path = image_name  # Update the latest image path
         camera.release()
-        return image_path
+        captured_images.append(image_filename)
+        latest_image = image_filename
+        return image_filename
     else:
         camera.release()
         return None
+
+
 
 def motion_detected():
     """Handle motion detection."""
@@ -57,17 +59,17 @@ def motion_detected():
     sleep(1)
     buzzer.off()
     
-    image_path = capture_image()
-    if image_path:
-        alert_message = f"Motion detected at {datetime.now()}! Picture saved at {image_path}"
+    image_filename = capture_image()
+    if image_filename:
+        alert_message = f"Motion detected at {datetime.now()}! Picture saved as {image_filename}"
         alerts.append(alert_message)
-        send_sms('+233242013172', f"Intruder detected! Check: http://10.10.80.154:5000/{image_path}")
+        send_sms('+233242013172', f"Intruder detected! Check: http://10.10.80.154:5000/static/{image_filename}")
         print(alert_message)
 
 @app.route('/')
 def index():
-    """Homepage with controls."""
-    return render_template('index.html', alerts=alerts, latest_image=latest_image_path)
+    """Homepage with controls and alerts."""
+    return render_template('index1.html', alerts=alerts, latest_image=latest_image, captured_images=captured_images)
 
 @app.route('/start')
 def start_monitoring():
@@ -75,7 +77,7 @@ def start_monitoring():
     global monitoring
     monitoring = True
     pir.when_motion = motion_detected
-    return redirect(url_for('index'))
+    return jsonify({"status": "Monitoring started"})
 
 @app.route('/stop')
 def stop_monitoring():
@@ -83,15 +85,21 @@ def stop_monitoring():
     global monitoring
     monitoring = False
     pir.when_motion = None
-    return redirect(url_for('index'))
+    return jsonify({"status": "Monitoring stopped"})
 
 @app.route('/alert_police')
 def alert_police():
     """Simulate alerting the police."""
-    # Add logic to alert police (e.g., send an SMS or email)
     alerts.append("Police alerted!")
-    send_sms('+233508756598', "Intruder detected! Immediate assistance required!")
-    return redirect(url_for('index'))
+    send_sms('+233508756598', "Intruder detected at adress: KPO-O23! Immediate assistance required!")
+    return jsonify({"status": "Police alerted"})
+
+@app.route('/alerts')
+def get_alerts():
+    """Endpoint to fetch alerts dynamically."""
+    return jsonify(alerts=alerts, latest_image=latest_image, captured_images=captured_images)
 
 if __name__ == '__main__':
+    if not os.path.exists('static'):
+        os.makedirs('static')
     app.run(host='0.0.0.0', port=5000, debug=True)

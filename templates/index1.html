@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Security System</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: url('https://source.unsplash.com/1600x900/?security,technology') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+
+        h1, h2 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        #controls {
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .img-fluid {
+            border: 3px solid #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            max-width: 80%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .list-group-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4 text-center">IoT Security System</h1>
+
+        <div id="controls" class="text-center">
+            <button class="btn btn-success" onclick="startMonitoring()">Start Monitoring</button>
+            <button class="btn btn-danger" onclick="stopMonitoring()">Stop Monitoring</button>
+            <button class="btn btn-warning" onclick="alertPolice()">Alert Police</button>
+        </div>
+
+        <!-- Display the latest captured image -->
+        <div id="latest-image" class="text-center">
+            <h2>Latest Intruder Image</h2>
+            {% if latest_image %}
+                <img id="intruder-image" src="{{ url_for('static', filename=latest_image) }}" class="img-fluid" alt="Intruder Image">
+            {% else %}
+                <p id="no-image-msg">No image captured yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Image Gallery -->
+        <div id="gallery" class="mt-5 text-center">
+            <h2>Captured Images Gallery</h2>
+            <div class="row">
+                {% for image in captured_images %}
+                    <div class="col-md-3">
+                        <img src="{{ url_for('static', filename=image) }}" class="img-fluid mb-2" alt="Captured Image">
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="alerts" class="mt-5">
+            <h2>Past Alerts</h2>
+            <ul class="list-group" id="alert-list">
+                {% for alert in alerts %}
+                    <li class="list-group-item">{{ alert }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function startMonitoring() {
+            fetch('/start')
+                .then(response => response.json())
+                .then(data => alert(data.status));
+        }
+
+        function stopMonitoring() {
+            fetch('/stop')
+                .then(response => response.json())
+                .then(data => alert(data.status));
+        }
+
+        function alertPolice() {
+            fetch('/alert_police')
+                .then(response => response.json())
+                .then(data => alert(data.status));
+        }
+
+        function updateAlerts() {
+            fetch('/alerts')
+                .then(response => response.json())
+                .then(data => {
+                    const alertList = document.getElementById('alert-list');
+                    alertList.innerHTML = '';
+                    data.alerts.forEach(alert => {
+                        const li = document.createElement('li');
+                        li.className = 'list-group-item';
+                        li.textContent = alert;
+                        alertList.appendChild(li);
+                    });
+
+                    const imageElement = document.getElementById('intruder-image');
+                    const noImageMsg = document.getElementById('no-image-msg');
+                    if (data.latest_image) {
+                        imageElement.src = `/static/${data.latest_image}`;
+                        imageElement.style.display = 'block';
+                        noImageMsg.style.display = 'none';
+                    } else {
+                        imageElement.style.display = 'none';
+                        noImageMsg.style.display = 'block';
+                    }
+                });
+        }
+
+        // Update alerts every 10 seconds
+        setInterval(updateAlerts, 10000);
+    </script>
+</body>
+</html>
