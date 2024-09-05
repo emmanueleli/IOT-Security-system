@@ -6,26 +6,91 @@
     <title>IoT Security System</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        #controls { margin: 20px; }
-        button { padding: 10px 15px; margin-right: 10px; }
-        #video-container { margin-top: 20px; }
+        body {
+            background: url('https://source.unsplash.com/1600x900/?technology,security') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 40px;
+        }
+
+        h1, h2 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        #controls {
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            font-size: 16px;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            border: none;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+            border: none;
+        }
+
+        .img-fluid {
+            border: 3px solid #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            max-width: 80%;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .list-group-item {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="my-4">IoT Security System</h1>
+        <h1 class="my-4 text-center">IoT Security System</h1>
 
-        <div id="controls" class="mb-4">
-            <button class="btn btn-success" onclick="startSecurity()">Start Monitoring</button>
-            <button class="btn btn-danger" onclick="stopSecurity()">Stop Monitoring</button>
+        <div id="controls" class="text-center">
+            <a href="/start" class="btn btn-success">Start Monitoring</a>
+            <a href="/stop" class="btn btn-danger">Stop Monitoring</a>
+            <a href="/alert_police" class="btn btn-warning">Alert Police</a>
         </div>
 
-        <div id="video-container" class="mb-4">
-            <h2>Live Camera Feed</h2>
-            <img src="{{ url_for('video_feed') }}" width="100%" class="img-fluid">
+        <!-- Display the latest captured image -->
+        <div id="latest-image" class="text-center">
+            <h2>Latest Intruder Image</h2>
+            {% if latest_image %}
+                <img src="{{ url_for('static', filename=latest_image) }}" class="img-fluid" alt="Intruder Image">
+            {% else %}
+                <p>No image captured yet.</p>
+            {% endif %}
         </div>
 
-        <div id="alerts">
+        <div id="alerts" class="mt-5">
             <h2>Past Alerts</h2>
             <ul class="list-group">
                 {% for alert in alerts %}
@@ -34,19 +99,5 @@
             </ul>
         </div>
     </div>
-
-    <script>
-        function startSecurity() {
-            fetch('/start')
-                .then(response => response.text())
-                .then(data => alert(data));
-        }
-
-        function stopSecurity() {
-            fetch('/stop')
-                .then(response => response.text())
-                .then(data => alert(data));
-        }
-    </script>
 </body>
 </html>

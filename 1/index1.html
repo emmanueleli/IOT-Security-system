@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Security System</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        #controls { margin: 20px; }
+        button { padding: 10px 15px; margin-right: 10px; }
+        #video-container { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">IoT Security System</h1>
+
+        <div id="controls" class="mb-4">
+            <button class="btn btn-success" onclick="startSecurity()">Start Monitoring</button>
+            <button class="btn btn-danger" onclick="stopSecurity()">Stop Monitoring</button>
+        </div>
+
+        <div id="video-container" class="mb-4">
+            <h2>Live Camera Feed</h2>
+            <img src="{{ url_for('video_feed') }}" width="100%" class="img-fluid">
+        </div>
+
+        <div id="alerts">
+            <h2>Past Alerts</h2>
+            <ul class="list-group">
+                {% for alert in alerts %}
+                    <li class="list-group-item">{{ alert }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function startSecurity() {
+            fetch('/start')
+                .then(response => response.text())
+                .then(data => alert(data));
+        }
+
+        function stopSecurity() {
+            fetch('/stop')
+                .then(response => response.text())
+                .then(data => alert(data));
+        }
+    </script>
+</body>
+</html>
