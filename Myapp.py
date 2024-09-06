@@ -5,6 +5,8 @@ import serial
 from time import sleep
 from datetime import datetime
 import os
+import subprocess
+
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -29,22 +31,33 @@ def send_sms(phone_number, message):
     sleep(1)
 
 def capture_image():
-    """Capture image from the camera."""
     global latest_image_path
-    camera = cv2.VideoCapture(0)
+
+    # Wait for 2 seconds before capturing the image (if needed)
     sleep(2)
-    ret, frame = camera.read()
-    if ret:
-        # Save image to the static directory
-        image_name = f'intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
-        image_path = os.path.join('static', image_name)
-        cv2.imwrite(image_path, frame)
+
+    # Define the image name and path
+    image_name = f'intruder_{datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg'
+    image_path = os.path.join('static', image_name)
+
+    # Capture image using libcamera-still command
+    command = f"libcamera-still -o {image_path}"
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+    # Check if the command was successful
+    if process.returncode == 0:
         latest_image_path = image_name  # Update the latest image path
-        camera.release()
         return image_path
     else:
-        camera.release()
+        print("Error capturing image:", process.stderr)
         return None
+
+# Example usage
+image_path = capture_image()
+if image_path:
+    print(f"Image saved at: {image_path}")
+else:
+    print("Failed to capture image.")
 
 def motion_detected():
     """Handle motion detection."""
